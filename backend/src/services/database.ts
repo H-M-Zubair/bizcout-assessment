@@ -1,5 +1,4 @@
 import sqlite3 from 'sqlite3';
-import { promisify } from 'util';
 import { logger } from '../utils/logger';
 
 export interface PingRecord {
@@ -69,7 +68,7 @@ export class DatabaseService {
         this.db!.all(
           `PRAGMA table_info(ping_records)`,
           [],
-          (pragmaErr, columns: any[]) => {
+          (pragmaErr, columns: Array<{ name: string; type: string; notnull: number; dflt_value: unknown; pk: number }>) => {
             if (pragmaErr) {
               logger.warn('Could not check table info for migration:', pragmaErr.message);
               // Continue with index creation even if migration check fails
@@ -180,7 +179,7 @@ export class DatabaseService {
       }
 
       let whereClause = 'WHERE 1=1';
-      const params: any[] = [];
+      const params: (string | number)[] = [];
 
       if (filters.statusCode) {
         whereClause += ' AND status_code = ?';
@@ -209,7 +208,7 @@ export class DatabaseService {
 
       // Get total count
       const countSql = `SELECT COUNT(*) as total FROM ping_records ${whereClause}`;
-      this.db.get(countSql, params, (err, countRow: any) => {
+      this.db.get(countSql, params, (err, countRow: { total: number }) => {
         if (err) {
           reject(err);
           return;
@@ -307,7 +306,7 @@ export class DatabaseService {
         GROUP BY status_code
       `;
 
-      this.db.all(sql, [], (err, rows: any[]) => {
+      this.db.all(sql, [], (err, rows: Array<{ totalRequests: number; averageResponseTime: number; successCount: number; status_code: number }>) => {
         if (err) {
           reject(err);
         } else {

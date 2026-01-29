@@ -46,12 +46,12 @@ export class PingService {
     }
   }
 
-  private generateRandomPayload(): Record<string, any> {
+  private generateRandomPayload(): Record<string, unknown> {
     const adjectives = ['fast', 'slow', 'large', 'small', 'complex', 'simple', 'heavy', 'light'];
     const nouns = ['request', 'payload', 'data', 'package', 'message', 'packet', 'bundle', 'container'];
     const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'black', 'white'];
     
-    const randomChoice = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+    const randomChoice = (arr: string[]): string => arr[Math.floor(Math.random() * arr.length)];
     
     return {
       timestamp: new Date().toISOString(),
@@ -123,25 +123,29 @@ export class PingService {
         ...record
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       const endTime = Date.now();
       const responseTime = endTime - startTime;
 
-      logger.error('Ping failed:', error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isAxiosError = axios.isAxiosError(error);
+      const axiosError = isAxiosError ? error : null;
+
+      logger.error('Ping failed:', errorMessage);
 
       const record: Omit<PingRecord, 'id'> = {
         timestamp: new Date().toISOString(),
         requestPayload: JSON.stringify(payload),
         responseData: JSON.stringify({
-          error: error.message,
-          code: error.code || 'UNKNOWN_ERROR',
-          config: error.config ? {
-            url: error.config.url,
-            method: error.config.method,
-            timeout: error.config.timeout
+          error: errorMessage,
+          code: axiosError?.code || 'UNKNOWN_ERROR',
+          config: axiosError?.config ? {
+            url: axiosError.config.url,
+            method: axiosError.config.method,
+            timeout: axiosError.config.timeout
           } : null
         }),
-        statusCode: error.response?.status || 0,
+        statusCode: axiosError?.response?.status || 0,
         responseTime,
         contentType: 'application/json',
         contentLength: 0,
