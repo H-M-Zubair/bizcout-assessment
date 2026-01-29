@@ -3,16 +3,17 @@ import { DatabaseService } from '../../services/database';
 import { Server } from 'socket.io';
 import axios, { AxiosError } from 'axios';
 
-// Mock dependencies - create mock function that can be accessed
-const mockAxiosPost = jest.fn();
-
+// Mock dependencies - create mock function inside factory to avoid hoisting issues
 jest.mock('axios', () => {
   const actualAxios = jest.requireActual('axios');
+  const mockPost = jest.fn();
   const mockAxios = {
     ...actualAxios.default,
-    post: mockAxiosPost,
+    post: mockPost,
     isAxiosError: actualAxios.default.isAxiosError
   };
+  // Store mock function on the module for access in tests
+  (mockAxios as any).__mockPost = mockPost;
   return {
     ...actualAxios,
     __esModule: true,
@@ -37,8 +38,12 @@ const mockIo = {
 describe('PingService', () => {
   let pingService: PingService;
   let mockDatabaseService: jest.Mocked<DatabaseService>;
+  let mockAxiosPost: jest.Mock;
 
   beforeEach(() => {
+    // Get the mock function from the mocked axios module
+    mockAxiosPost = (axios as any).__mockPost;
+    
     // Reset all mocks
     jest.clearAllMocks();
     mockAxiosPost.mockClear();
