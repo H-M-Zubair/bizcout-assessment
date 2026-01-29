@@ -3,16 +3,22 @@ import { DatabaseService } from '../../services/database';
 import { Server } from 'socket.io';
 import axios, { AxiosError } from 'axios';
 
-// Mock dependencies
+// Mock dependencies - create mock object that can be accessed
+const axiosMocks = {
+  post: jest.fn()
+};
+
 jest.mock('axios', () => {
   const actualAxios = jest.requireActual('axios');
-  const mockPost = jest.fn();
+  const mockAxios = {
+    ...actualAxios.default,
+    post: axiosMocks.post,
+    isAxiosError: actualAxios.default.isAxiosError
+  };
   return {
     ...actualAxios,
-    default: Object.assign(actualAxios.default, {
-      post: mockPost
-    }),
-    __mockPost: mockPost
+    __esModule: true,
+    default: mockAxios
   };
 });
 jest.mock('../../services/database');
@@ -33,15 +39,11 @@ const mockIo = {
 describe('PingService', () => {
   let pingService: PingService;
   let mockDatabaseService: jest.Mocked<DatabaseService>;
-  let mockAxiosPost: jest.Mock;
 
   beforeEach(() => {
-    // Get the mocked post function
-    mockAxiosPost = (axios as any).__mockPost;
-    
     // Reset all mocks
     jest.clearAllMocks();
-    mockAxiosPost.mockClear();
+    axiosMocks.post.mockClear();
     
     // Create mock database service
     mockDatabaseService = {
@@ -111,13 +113,13 @@ describe('PingService', () => {
         }
       };
 
-      mockAxiosPost.mockResolvedValueOnce(mockResponse);
+      axiosMocks.post.mockResolvedValueOnce(mockResponse);
 
       // Perform the ping
       await (pingService as any).performPing();
 
       // Verify axios was called correctly
-      expect(mockAxiosPost).toHaveBeenCalledWith(
+      expect(axiosMocks.post).toHaveBeenCalledWith(
         'https://httpbin.org/anything',
         expect.any(Object),
         expect.objectContaining({
@@ -147,7 +149,7 @@ describe('PingService', () => {
 
     it('should handle network error', async () => {
       const networkError = new Error('ECONNREFUSED');
-      mockAxiosPost.mockRejectedValueOnce(networkError);
+      axiosMocks.post.mockRejectedValueOnce(networkError);
 
       await (pingService as any).performPing();
 
@@ -176,7 +178,7 @@ describe('PingService', () => {
       };
       httpError.config = {} as any;
       httpError.isAxiosError = true;
-      mockAxiosPost.mockRejectedValueOnce(httpError);
+      axiosMocks.post.mockRejectedValueOnce(httpError);
 
       await (pingService as any).performPing();
 
@@ -190,7 +192,7 @@ describe('PingService', () => {
 
     it('should handle timeout error', async () => {
       const timeoutError = new Error('ECONNABORTED');
-      mockAxiosPost.mockRejectedValueOnce(timeoutError);
+      axiosMocks.post.mockRejectedValueOnce(timeoutError);
 
       await (pingService as any).performPing();
 
@@ -238,11 +240,11 @@ describe('PingService', () => {
         data: { success: true }
       };
 
-      mockAxiosPost.mockResolvedValueOnce(mockResponse);
+      axiosMocks.post.mockResolvedValueOnce(mockResponse);
 
       await pingService.pingOnce();
 
-      expect(mockAxiosPost).toHaveBeenCalledTimes(1);
+      expect(axiosMocks.post).toHaveBeenCalledTimes(1);
       expect(mockDatabaseService.insertPingRecord).toHaveBeenCalledTimes(1);
     });
   });

@@ -111,6 +111,7 @@ A full-stack monitoring system that automatically pings `httpbin.org/anything` e
 
 ### **CI Pipeline (GitHub Actions):**
 - `.github/workflows/ci.yml` runs lint, tests, and build for both apps
+- **📖 Detailed Documentation:** See [CI_CD_DOCUMENTATION.md](./CI_CD_DOCUMENTATION.md) for complete pipeline description, test coverage, and validation checks
 
 ### **Root Package.json:**
 - Orchestrates frontend + backend scripts
