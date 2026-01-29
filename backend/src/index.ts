@@ -24,7 +24,6 @@ const io = new Server(server, {
 });
 
 const PORT = process.env.PORT || 8001;
-console.log("PORT IS ............",PORT);
 // Middleware
 app.use(helmet());
 app.use(compression());

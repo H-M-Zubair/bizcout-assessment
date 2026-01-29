@@ -4,8 +4,9 @@ module.exports = {
     ecmaVersion: 2020,
     sourceType: 'module',
   },
+  plugins: ['@typescript-eslint'],
   extends: [
-    '@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended',
   ],
   rules: {
     '@typescript-eslint/no-unused-vars': 'error',
