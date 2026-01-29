@@ -4,11 +4,14 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { apiRoutes } from '../../routes/api';
 import { DatabaseService } from '../../services/database';
+import { PingService } from '../../services/ping';
 
 describe('API Integration Tests', () => {
   let app: express.Application;
   let server: any;
   let databaseService: DatabaseService;
+  let pingService: PingService;
+  let mockIo: Server;
 
   beforeAll(async () => {
     // Setup test database
@@ -16,10 +19,19 @@ describe('API Integration Tests', () => {
     process.env.DB_PATH = ':memory:';
     await databaseService.initialize();
 
+    // Setup mock Socket.IO server
+    mockIo = {
+      emit: jest.fn(),
+      on: jest.fn()
+    } as unknown as Server;
+
+    // Setup PingService
+    pingService = new PingService(databaseService, mockIo);
+
     // Setup Express app
     app = express();
     app.use(express.json());
-    app.use('/api', apiRoutes(databaseService));
+    app.use('/api', apiRoutes(databaseService, pingService));
     
     server = createServer(app);
   });
