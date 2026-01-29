@@ -10,6 +10,16 @@ This document describes the CI/CD pipeline for the HTTPBin Monitor application. 
 
 ---
 
+## Common Issues & Resolutions
+
+**ESLint Configuration:** Missing `plugins` array and incorrect `extends` format (use `plugin:@typescript-eslint/recommended` instead of `@typescript-eslint/recommended`) - Fixed by adding plugins declaration and correcting extends syntax.
+
+**TypeScript Linting:** Unused imports, `any` types, and missing return types - Resolved by removing unused code, replacing `any` with proper types (`unknown`, specific interfaces), and adding explicit return type annotations.
+
+**Test Failures:** Axios mocking not intercepting HTTP calls and missing `pingService` parameter in API route tests - Fixed by properly configuring Jest mocks with module-level mock objects and updating test setup to include all required service dependencies.
+
+---
+
 ## Pipeline Structure
 
 The pipeline consists of **3 jobs**:
